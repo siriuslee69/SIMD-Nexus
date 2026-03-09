@@ -95,7 +95,7 @@ proc myProc(a, b: uint8): uint8 =
 ### Project Layout
 - The actual project belongs in `src`. Create it if missing.
 - Submodules can live outside `src`.
-- Every repo must include a `valkyrie/` folder next to `src/` for repo-coordination metadata.
+- Every repo must include a `iron/` folder next to `src/` for repo-coordination metadata.
 - Every module (`.nim` file) must have a description at the top explaining what it does.
 - Organize modules by dependency levels (helpers/types at top; deeper modules depend upward).
 
@@ -120,9 +120,9 @@ src/level1/level2/module3.nim
 - Always include a `tests` folder with unit tests for important functions.
 - After changing code or dependencies, run tests and fix errors.
 
-### Valkyrie Folder (Repo Coordination)
-- Use `proto-conventions/valkyrie/` as the template source.
-- The local submodule override file is `valkyrie/.gitmodules.local` and must be ignored by git.
+### iron Folder (Repo Coordination)
+- Use `proto-conventions/iron/` as the template source.
+- The local submodule override file is `iron/.gitmodules.local` and must be ignored by git.
 
 ### Dependencies and External Projects
 - If you need an entirely different project as a dependency, ask before starting a new sibling repo.

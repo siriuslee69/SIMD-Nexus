@@ -13,7 +13,7 @@ Features Implemented:
 - Generic i8/i16/u64 and f32/f64 SIMD helpers (lanes, set1, load/store, rotate, xor/add helpers).
 - Added missing shifts/bitwise ops for i8/i16/u64 and f64 operators for SSE/AVX.
 - SIMD iterators with vector masks for u32/i8/i16/u64/f32/f64.
-- Added valkyrie template folder and full README conventions.
+- Added iron template folder and full README conventions.
 
 Features In Progress:
 - (none)

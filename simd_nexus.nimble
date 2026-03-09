@@ -15,8 +15,8 @@ task test, "Run unit tests":
 task build, "Build simd_nexus module":
   exec "nim c src/simd_nexus.nim"
 
-task autopush, "Add, commit, and push with message from valk/progress.md":
-  let path = "valk/progress.md"
+task autopush, "Add, commit, and push with message from iron/progress.md":
+  let path = "iron/progress.md"
   var msg = ""
   if fileExists(path):
     let content = readFile(path)
