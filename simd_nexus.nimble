@@ -5,7 +5,7 @@ author        = "siriuslee69"
 description   = "SIMD helper types and operations."
 license       = "UNLICENSED"
 srcDir        = "src"
-requires "nim >= 1.6.0", "owlkettle >= 3.0.0", "illwill >= 0.4.0"
+requires "nim >= 1.6.0"
 requires "nimsimd >= 1.3.2"
 
 
