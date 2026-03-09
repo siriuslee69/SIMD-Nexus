@@ -1,0 +1,4 @@
+builds/
+*.exe
+valk/valkyrie_config.md
+valk/.gitmodules.local
