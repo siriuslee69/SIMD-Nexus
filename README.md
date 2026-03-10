@@ -121,8 +121,8 @@ src/level1/level2/module3.nim
 - After changing code or dependencies, run tests and fix errors.
 
 ### iron Folder (Repo Coordination)
-- Use `proto-conventions/iron/` as the template source.
-- The local submodule override file is `iron/.gitmodules.local` and must be ignored by git.
+- Use `Proto-RepoTemplate/.iron/` as the template source.
+- The local submodule override file is `.iron/.local.gitmodules.toml` and must be ignored by git.
 
 ### Dependencies and External Projects
 - If you need an entirely different project as a dependency, ask before starting a new sibling repo.
