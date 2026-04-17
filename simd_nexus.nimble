@@ -15,10 +15,15 @@ task test, "Run unit tests":
 task build, "Build simd_nexus module":
   exec "nim c src/simd_nexus.nim"
 
-task autopush, "Add, commit, and push with message from iron/progress.md":
-  let path = "iron/progress.md"
+task autopush, "Add, commit, and push with message from .iron/PROGRESS.md":
+  let progressCandidates = @[".iron/PROGRESS.md", ".iron/progress.md", "progress.md"]
+  var path = ""
+  for candidate in progressCandidates:
+    if fileExists(candidate):
+      path = candidate
+      break
   var msg = ""
-  if fileExists(path):
+  if path.len > 0 and fileExists(path):
     let content = readFile(path)
     for line in content.splitLines:
       if line.startsWith("Commit Message:"):

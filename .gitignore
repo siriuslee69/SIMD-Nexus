@@ -1,5 +1,7 @@
 builds/
 *.exe
+src/*.exe
+tests/*.exe
 iron/iron_config.md
 iron/.gitmodules.local
 .iron/.local*

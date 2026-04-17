@@ -36,8 +36,8 @@ for (i, mask) in simdRangeU32[M128i](0'u32, 6):
 - Use concise parameter names based on meaning; document each parameter with `##`.
 - Declare variables at the top of procs; initialize immediately when possible.
 - Add SIMD helpers in shared locations to avoid near-duplicate implementations.
-- Keep `progress.md` updated with commit message, features, and recent work notes.
-- Add nimble tasks for tests/builds and an `autopush` task using `progress.md`.
+- Keep `.iron/PROGRESS.md` updated with commit message, features, and recent work notes.
+- Add nimble tasks for tests/builds and an `autopush` task using `.iron/PROGRESS.md`.
 - Exclude `builds/` and `*.exe` in `.gitignore`.
 
 ## Coding Conventions (Full)
@@ -95,7 +95,7 @@ proc myProc(a, b: uint8): uint8 =
 ### Project Layout
 - The actual project belongs in `src`. Create it if missing.
 - Submodules can live outside `src`.
-- Every repo must include a `iron/` folder next to `src/` for repo-coordination metadata.
+- Every repo must include a `.iron/` folder next to `src/` for repo-coordination metadata.
 - Every module (`.nim` file) must have a description at the top explaining what it does.
 - Organize modules by dependency levels (helpers/types at top; deeper modules depend upward).
 
@@ -137,12 +137,12 @@ src/level1/level2/module3.nim
 ### Nimsuggest
 - Do not write pre-compile-time import statements that prevent nimsuggest from checking functions.
 
-### progress.md
+### .iron/PROGRESS.md
 - Track current commit message, features planned/implemented/in progress, and recent changes/problems.
 
 ### .nimble Tasks
 - Include tasks for tests and builders.
-- Include an `autopush` task that reads the commit message from `progress.md`.
+- Include an `autopush` task that reads the commit message from `.iron/PROGRESS.md`.
 
 ### Git
 - Add `builds/` and `*.exe` to `.gitignore`.
@@ -150,3 +150,12 @@ src/level1/level2/module3.nim
 ### Repo Examples (App vs Library)
 - Libraries do not need a frontend (at most a CLI).
 - Avoid frontend/backend splits in library repos.
+
+## Issue Playbook
+
+- Symptom: `nimble test` or `nimble build` fails with Nimble metadata write errors under `%USERPROFILE%\\.nimble` (for example `nimbledata2.json`).
+  Workaround: run direct Nim commands such as `nim c -r tests/test_basic.nim` and `nim c src/simd_nexus.nim`, then record the environment issue in `.iron/PROGRESS.md`.
+- Symptom: stale `*.exe` files appear in `src/` or `tests/` after local runs.
+  Workaround: remove generated binaries before committing; `*.exe` is intentionally ignored and only Nim sources should be tracked.
+- Symptom: `nimble autopush` uses a generic commit message.
+  Workaround: ensure `.iron/PROGRESS.md` contains a line starting with `Commit Message:` and rerun `nimble autopush`.

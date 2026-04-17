@@ -5,16 +5,16 @@
 
 import std/unittest
 import nimsimd/sse2
-import ../src/simd_nexus/simd/base_operations
-import ../src/simd_nexus/simd/converters
-import ../src/simd_nexus/simd/generic_u32
-import ../src/simd_nexus/simd/generic_i8
-import ../src/simd_nexus/simd/generic_i16
-import ../src/simd_nexus/simd/generic_u64
-import ../src/simd_nexus/simd/generic_f32
-import ../src/simd_nexus/simd/generic_f64
-import ../src/simd_nexus/simd/iterators
-import ../src/simd_nexus/sequences/custom_operations
+import ../src/protocols/simd/base_operations
+import ../src/protocols/simd/converters
+import ../src/protocols/simd/generic_u32
+import ../src/protocols/simd/generic_i8
+import ../src/protocols/simd/generic_i16
+import ../src/protocols/simd/generic_u64
+import ../src/protocols/simd/generic_f32
+import ../src/protocols/simd/generic_f64
+import ../src/protocols/simd/iterators
+import ../src/protocols/sequences/custom_operations
 
 suite "simd_nexus basic":
   test "i32x4 add/extract":
