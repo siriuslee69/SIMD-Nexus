@@ -28,6 +28,80 @@ for (i, mask) in simdRangeU32[M128i](0'u32, 6):
   echo idxs, " ", masks
 ```
 
+## GPU Dispatch And NN Helpers
+
+SIMD-Nexus now exposes a higher-level GPU dispatch surface that keeps user code
+Nim-native. You write procs/operators over `GpuArray[T]`; SIMD-Nexus builds the
+operation graph and dispatches it to the selected device. A CPU fallback device
+is always present, so the API is testable without OpenCL drivers.
+
+```nim
+import simd_nexus
+
+proc myGpuFunc(x, y: GpuArray[float32]): GpuOp[float32] =
+  result = (x + y)
+
+var
+  dataA = @[1.0'f32, 2.0'f32, 3.0'f32]
+  dataB = @[4.0'f32, 5.0'f32, 6.0'f32]
+  gpu = getGpu()[0]
+  a = dispatch(dataA, gpu)
+  b = dispatch(dataB, gpu)
+  out = dispatch(myGpuFunc(a, b), gpu)
+
+echo out.toSeq()
+```
+
+Arrays work the same way as sequences, and can be converted into a chosen GPU
+element type when needed:
+
+```nim
+import simd_nexus
+
+var
+  gpu = getGpu()[0]
+  raw: array[4, int32] = [1'i32, 2, 3, 4]
+  asI32 = toGpuArray(raw, gpu)
+  asF32 = toGpuArrayAs(raw, float32, gpu)
+  alsoF32 = dispatch(raw, float32, gpu)
+```
+
+Supported high-level operations:
+
+| API | Purpose |
+| --- | --- |
+| `getGpu()` | Return OpenCL GPUs when enabled plus a CPU fallback. |
+| `selectGpu(i)` | Select a device by ordinal, with fallback. |
+| `toGpuArray(arrayOrSeq, gpu)` | Move host data into a `GpuArray` preserving element type. |
+| `toGpuArrayAs(arrayOrSeq, T, gpu)` | Convert host data into `GpuArray[T]`. |
+| `dispatch(arrayOrSeq, gpu)` | Move host data into a `GpuArray`. |
+| `dispatch(arrayOrSeq, T, gpu)` | Convert host data into `GpuArray[T]`. |
+| `dispatch(op, gpu)` | Execute a numeric operation. |
+| `+ - * /` | Elementwise numeric operations over `GpuArray`. |
+| `scale`, `relu`, `sigmoid`, `tanhAct` | Basic NN/vector transforms. |
+| `dot`, `sum` | Reductions returning `GpuScalar`. |
+
+Backend behavior:
+
+```text
+GpuArray / GpuOp
+    |
+    v
+dispatch(op, selectedGpu)
+    |
+    +--> OpenCL f32 elementwise path when compiled with -d:simdNexusOpenCL
+    |
+    +--> CPU fallback for all supported numeric ops
+```
+
+The OpenCL path is intentionally generated from Nim-side operation kinds for
+basic numeric kernels. Users do not write OpenCL C for `+`, `-`, `*`, `/`,
+`scale`, `relu`, `sigmoid`, or `tanhAct`.
+
+Dense layers, neural-network orchestration, and particle swarm optimization live
+in `Lineage-GeneticProgramming`. SIMD-Nexus stays focused on device dispatch,
+type conversion, primitive vector ops, and low-level kernels.
+
 ## Coding Conventions (Short)
 
 - Prefer clarity and modularity over micro-optimizations.

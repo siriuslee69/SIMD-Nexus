@@ -16,7 +16,8 @@ import
     ./protocols/simd/generic_f64,
     ./protocols/simd/iterators,
     ./protocols/sequences/custom_operations as sequence_custom_operations,
-    ./protocols/sequences/byte_streams as sequence_byte_streams
+    ./protocols/sequences/byte_streams as sequence_byte_streams,
+    ./protocols/gpu/dispatch as gpu_dispatch
 
 export
     base_operations,
@@ -31,5 +32,6 @@ export
     generic_f64,
     iterators,
     sequence_custom_operations,
-    sequence_byte_streams
+    sequence_byte_streams,
+    gpu_dispatch
 

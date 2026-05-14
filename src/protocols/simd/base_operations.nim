@@ -507,14 +507,53 @@ template `/`*(A, B: M256d): M256d =
 ####-------------------- NEON templates ----------------------####
 
 
+template `and`*(A, B: uint16x8): uint16x8 =
+    vandq_u16(A, B)
+
 template `and`*(A, B: uint32x4): uint32x4  =
     vandq_u32(A, B)
+
+template `and`*(A, B: uint64x2): uint64x2 =
+    vandq_u64(A, B)
+
+template `or`*(A, B: uint16x8): uint16x8 =
+    vorrq_u16(A, B)
 
 template `or`*(A, B: uint32x4): uint32x4  =
     vorrq_u32(A, B)
 
+template `or`*(A, B: uint64x2): uint64x2 =
+    vorrq_u64(A, B)
+
+template `xor`*(A, B: uint16x8): uint16x8 =
+    veorq_u16(A, B)
+
 template `xor`*(A, B: uint32x4): uint32x4  =
     veorq_u32(A, B)
+
+template `xor`*(A, B: uint64x2): uint64x2 =
+    veorq_u64(A, B)
+
+template `+`*(A, B: uint16x8): uint16x8 =
+    vaddq_u16(A, B)
+
+template `-`*(A, B: uint16x8): uint16x8 =
+    vsubq_u16(A, B)
+
+template `+`*(A, B: uint32x4): uint32x4 =
+    vaddq_u32(A, B)
+
+template `-`*(A, B: uint32x4): uint32x4 =
+    vsubq_u32(A, B)
+
+template `+`*(A, B: uint64x2): uint64x2 =
+    vaddq_u64(A, B)
+
+template `-`*(A, B: uint64x2): uint64x2 =
+    vsubq_u64(A, B)
+
+template `not`*(A: uint16x8): uint16x8 =
+    veorq_u16(A, vmovq_n_u16(0xffff'u16))
 
 template `shl`*(A, B: uint32x4): uint32x4  =
     vshlq_n_u32(A, B)
@@ -523,18 +562,84 @@ template `not`*(A: uint32x4): uint32x4 =
     ## A: input vector.
     vmvnq_u32(A)
 
-template `shl`*(A: uint32x4, k: int32|uint32): uint32x4  =
-    ## A: input vector.
-    ## k: shift amount.
-    vshlq_n_u32(A, int32(k))
+template `not`*(A: uint64x2): uint64x2 =
+    veorq_u64(A, vmovq_n_u64(0xffffffffffffffff'u64))
 
-template `shr`*(A: uint32x4, k: int32|uint32): uint32x4  =
+proc `shl`*(A: uint16x8, k: int32|uint32): uint16x8  =
+    var
+        src: array[8, uint16]
+        dst: array[8, uint16]
+        i: int = 0
+    vst1q_u16(cast[pointer](unsafeAddr src[0]), A)
+    while i < src.len:
+        dst[i] = src[i] shl int(k)
+        i = i + 1
+    result = vld1q_u16(cast[pointer](unsafeAddr dst[0]))
+
+proc `shr`*(A: uint16x8, k: int32|uint32): uint16x8  =
+    var
+        src: array[8, uint16]
+        dst: array[8, uint16]
+        i: int = 0
+    vst1q_u16(cast[pointer](unsafeAddr src[0]), A)
+    while i < src.len:
+        dst[i] = src[i] shr int(k)
+        i = i + 1
+    result = vld1q_u16(cast[pointer](unsafeAddr dst[0]))
+
+proc `shl`*(A: uint32x4, k: int32|uint32): uint32x4  =
     ## A: input vector.
     ## k: shift amount.
-    vshrq_n_u32(A, int32(k))
+    var
+        src: array[4, uint32]
+        dst: array[4, uint32]
+        i: int = 0
+    vst1q_u32(cast[pointer](unsafeAddr src[0]), A)
+    while i < src.len:
+        dst[i] = src[i] shl int(k)
+        i = i + 1
+    result = vld1q_u32(cast[pointer](unsafeAddr dst[0]))
+
+proc `shr`*(A: uint32x4, k: int32|uint32): uint32x4  =
+    ## A: input vector.
+    ## k: shift amount.
+    var
+        src: array[4, uint32]
+        dst: array[4, uint32]
+        i: int = 0
+    vst1q_u32(cast[pointer](unsafeAddr src[0]), A)
+    while i < src.len:
+        dst[i] = src[i] shr int(k)
+        i = i + 1
+    result = vld1q_u32(cast[pointer](unsafeAddr dst[0]))
 
 template `rot_left`*(A: uint32x4, k: int32): uint32x4 =
-    vorrq_u32(vshlq_n_u32(A, k), vshrq_n_u32(A, 32 - k))  
+    (A shl k) or (A shr (32 - k))
+
+proc `shl`*(A: uint64x2, k: int32|uint32): uint64x2 =
+    var
+        src: array[2, uint64]
+        dst: array[2, uint64]
+        i: int = 0
+    vst1q_u64(cast[pointer](unsafeAddr src[0]), A)
+    while i < src.len:
+        dst[i] = src[i] shl int(k)
+        i = i + 1
+    result = vld1q_u64(cast[pointer](unsafeAddr dst[0]))
+
+proc `shr`*(A: uint64x2, k: int32|uint32): uint64x2 =
+    var
+        src: array[2, uint64]
+        dst: array[2, uint64]
+        i: int = 0
+    vst1q_u64(cast[pointer](unsafeAddr src[0]), A)
+    while i < src.len:
+        dst[i] = src[i] shr int(k)
+        i = i + 1
+    result = vld1q_u64(cast[pointer](unsafeAddr dst[0]))
+
+template `rot_left`*(A: uint64x2, k: int32): uint64x2 =
+    (A shl k) or (A shr (64 - k))
     
 ####-------------------- M128i Sequence templates ----------------------####
 

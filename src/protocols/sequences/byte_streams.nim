@@ -6,6 +6,9 @@
 import
     nimsimd/sse2
 
+when defined(neon) or defined(arm64) or defined(aarch64):
+    import nimsimd/neon
+
 when defined(simdNexusEnableAvx2) or defined(eirEnableAvx2):
     {.passC: "-mavx2".}
     import nimsimd/avx2
@@ -23,6 +26,56 @@ type
         lanes*: seq[M128i]
         ## len: logical byte length (tail bytes in last lane may be padding).
         len*: int
+
+
+proc xorBytes16Into*(dst: var openArray[uint8], dstOffset: int,
+    A: openArray[uint8], aOffset: int, B: openArray[uint8], bOffset: int) =
+    ## dst: destination byte buffer with at least 16 writable bytes at dstOffset.
+    ## dstOffset: destination byte offset.
+    ## A: left byte buffer.
+    ## aOffset: left byte offset.
+    ## B: right byte buffer.
+    ## bOffset: right byte offset.
+    when defined(sse2):
+        var
+            va: M128i = mm_loadu_si128(cast[pointer](unsafeAddr A[aOffset]))
+            vb: M128i = mm_loadu_si128(cast[pointer](unsafeAddr B[bOffset]))
+        mm_storeu_si128(cast[pointer](unsafeAddr dst[dstOffset]), mm_xor_si128(va, vb))
+    elif defined(neon) or defined(arm64) or defined(aarch64):
+        var
+            va: uint8x16 = vld1q_u8(cast[pointer](unsafeAddr A[aOffset]))
+            vb: uint8x16 = vld1q_u8(cast[pointer](unsafeAddr B[bOffset]))
+        vst1q_u8(cast[pointer](unsafeAddr dst[dstOffset]), veorq_u8(va, vb))
+    else:
+        var
+            i: int = 0
+        while i < sseByteLaneWidth:
+            dst[dstOffset + i] = A[aOffset + i] xor B[bOffset + i]
+            i = i + 1
+
+
+proc xorBytes16InPlace*(dst: var openArray[uint8], dstOffset: int,
+    A: openArray[uint8], aOffset: int) =
+    ## dst: destination byte buffer mutated in place.
+    ## dstOffset: destination byte offset.
+    ## A: source byte buffer.
+    ## aOffset: source byte offset.
+    when defined(sse2):
+        var
+            vd: M128i = mm_loadu_si128(cast[pointer](unsafeAddr dst[dstOffset]))
+            va: M128i = mm_loadu_si128(cast[pointer](unsafeAddr A[aOffset]))
+        mm_storeu_si128(cast[pointer](unsafeAddr dst[dstOffset]), mm_xor_si128(vd, va))
+    elif defined(neon) or defined(arm64) or defined(aarch64):
+        var
+            vd: uint8x16 = vld1q_u8(cast[pointer](unsafeAddr dst[dstOffset]))
+            va: uint8x16 = vld1q_u8(cast[pointer](unsafeAddr A[aOffset]))
+        vst1q_u8(cast[pointer](unsafeAddr dst[dstOffset]), veorq_u8(vd, va))
+    else:
+        var
+            i: int = 0
+        while i < sseByteLaneWidth:
+            dst[dstOffset + i] = dst[dstOffset + i] xor A[aOffset + i]
+            i = i + 1
 
 
 proc toSseByteStream*(bs: openArray[uint8]): SseByteStream =

@@ -35,9 +35,18 @@ proc set1I32*[T: SimdI32](v: int32): T =
 proc loadI32x4*[T: SimdI32x4](A: array[4, int32]): T =
     ## A: input array with 4 elements.
     when T is uint32x4:
-        result = vreinterpretq_u32_s32(vld1q_s32(cast[pointer](unsafeAddr A[0])))
+        result = cast[uint32x4](vld1q_s32(cast[pointer](unsafeAddr A[0])))
     else:
         result = i32x4(mm_setr_epi32(A[0], A[1], A[2], A[3]))
+
+
+proc loadI32x4At*[T: SimdI32x4](A: openArray[int32], off: int): T =
+    ## A: input scalar slice.
+    ## off: starting offset.
+    when T is uint32x4:
+        result = cast[uint32x4](vld1q_s32(cast[pointer](unsafeAddr A[off])))
+    else:
+        result = i32x4(mm_loadu_si128(cast[pointer](unsafeAddr A[off])))
 
 
 proc loadI32x8*[T: SimdI32x8](A: array[8, int32]): T =
@@ -57,6 +66,16 @@ proc storeI32x4*[T: SimdI32x4](A: T): array[4, int32] =
     else:
         mm_storeu_si128(addr R[0], M128i(A))
     result = R
+
+
+proc storeI32x4At*[T: SimdI32x4](A: T, dst: var openArray[int32], off: int) =
+    ## A: input SIMD vector.
+    ## dst: destination scalar slice.
+    ## off: starting offset.
+    when T is uint32x4:
+        vst1q_s32(cast[pointer](unsafeAddr dst[off]), vreinterpretq_s32_u32(A))
+    else:
+        mm_storeu_si128(cast[pointer](unsafeAddr dst[off]), M128i(A))
 
 
 proc storeI32x8*[T: SimdI32x8](A: T): array[8, int32] =

@@ -15,6 +15,7 @@ import ../src/protocols/simd/generic_f32
 import ../src/protocols/simd/generic_f64
 import ../src/protocols/simd/iterators
 import ../src/protocols/sequences/custom_operations
+import ../src/protocols/gpu/dispatch
 
 suite "simd_nexus basic":
   test "i32x4 add/extract":
@@ -292,3 +293,40 @@ suite "simd_nexus iterators":
     check counts == 2
     check m0 == 0x3'i32
     check m1 == 0x1'i32
+
+suite "simd_nexus gpu dispatch":
+  test "array converters preserve or change element type":
+    var
+      g: GpuDevice
+      A: array[4, int32]
+      B: array[3, uint8]
+      x: GpuArray[int32]
+      y: GpuArray[float32]
+      z: GpuArray[uint8]
+    g = getGpu()[0]
+    A = [1'i32, 2'i32, 3'i32, 4'i32]
+    B = [5'u8, 6'u8, 7'u8]
+    x = toGpuArray(A, g)
+    y = toGpuArrayAs(A, float32, g)
+    z = dispatch(B, g)
+    check x.toSeq() == @[1'i32, 2'i32, 3'i32, 4'i32]
+    check y.toSeq() == @[1.0'f32, 2.0'f32, 3.0'f32, 4.0'f32]
+    check z.toSeq() == @[5'u8, 6'u8, 7'u8]
+
+  test "cpu fallback executes native-looking vector ops":
+    var
+      g: GpuDevice
+      x: GpuArray[float32]
+      y: GpuArray[float32]
+      z: GpuArray[float32]
+      r: GpuScalar[float32]
+    g = getGpu()[0]
+    x = dispatch(@[1.0'f32, 2.0'f32, 3.0'f32], g)
+    y = dispatch(@[4.0'f32, 5.0'f32, 6.0'f32], g)
+    z = dispatch(x + y, g)
+    check z.toSeq() == @[5.0'f32, 7.0'f32, 9.0'f32]
+    z = dispatch(scale(x, -2.0'f32), g)
+    z = dispatch(relu(z), g)
+    check z.toSeq() == @[0.0'f32, 0.0'f32, 0.0'f32]
+    r = dispatch(dot(x, y), g)
+    check r.value == 32.0'f32

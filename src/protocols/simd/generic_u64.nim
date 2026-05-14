@@ -5,11 +5,12 @@
 
 import
     nimsimd/avx2,
+    nimsimd/neon,
     ./base_operations
 
 
 type
-    SimdU64x2* = u64x2
+    SimdU64x2* = u64x2 | uint64x2
     SimdU64x4* = u64x4
     SimdU64* = SimdU64x2 | SimdU64x4
 
@@ -25,13 +26,18 @@ proc set1U64*[T: SimdU64](v: uint64): T =
     ## v: scalar value to broadcast across lanes.
     when T is SimdU64x4:
         result = u64x4(mm256_set1_epi64x(cast[int64](v)))
+    elif T is uint64x2:
+        result = vmovq_n_u64(v)
     else:
         result = u64x2(mm_set1_epi64x(cast[int64](v)))
 
 
 proc loadU64x2*[T: SimdU64x2](A: array[2, uint64]|array[2, int64]): T =
     ## A: input array with 2 elements.
-    result = u64x2(mm_loadu_si128(cast[pointer](unsafeAddr A[0])))
+    when T is uint64x2:
+        result = vld1q_u64(cast[pointer](unsafeAddr A[0]))
+    else:
+        result = u64x2(mm_loadu_si128(cast[pointer](unsafeAddr A[0])))
 
 
 proc loadU64x4*[T: SimdU64x4](A: array[4, uint64]|array[4, int64]): T =
@@ -43,7 +49,10 @@ proc storeU64x2*[T: SimdU64x2](A: T): array[2, uint64] =
     ## A: input SIMD vector.
     var
         R: array[2, uint64]
-    mm_storeu_si128(cast[pointer](unsafeAddr R[0]), M128i(A))
+    when T is uint64x2:
+        vst1q_u64(cast[pointer](unsafeAddr R[0]), A)
+    else:
+        mm_storeu_si128(cast[pointer](unsafeAddr R[0]), M128i(A))
     result = R
 
 
