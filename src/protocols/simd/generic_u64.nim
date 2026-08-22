@@ -3,6 +3,7 @@
 # <- Generic 64-bit SIMD traits and helpers. #
 #============================================#
 
+import ../isa/x86_avx2
 import
     nimsimd/avx2,
     nimsimd/neon,

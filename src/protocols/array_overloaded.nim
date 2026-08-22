@@ -3,6 +3,7 @@
 # <- Array convenience overloads.            #
 #============================================#
 
+import ./isa/x86_avx2
 import 
     nimsimd/sse2,
     nimsimd/avx2,

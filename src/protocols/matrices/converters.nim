@@ -3,6 +3,7 @@
 # <- Matrix-oriented SIMD conversions.       #
 #============================================#
 
+import ../isa/x86_avx2
 import 
     nimsimd/avx2
 

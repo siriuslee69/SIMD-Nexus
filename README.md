@@ -6,8 +6,67 @@ SIMD helper types, conversions, and operations for Nim with AVX2/SSE/NEON backen
 
 - `simd/`: core SIMD types, conversions, and operations (including generic traits/helpers and SIMD iterators with masks).
 - `matrices/`: matrix-oriented SIMD helpers.
-- `sequences/`: SIMD-aware sequence utilities.
+- `sequences/`: SIMD-aware sequence utilities, including GF(256) field arithmetic.
+- `isa/`: instruction-set declarations imported by the modules that need them.
 - `tests/`: unit tests for core behavior.
+
+## Import Only What You Use
+
+There is no build-flag facade and no `when` switch per function. Two ordinary
+Nim mechanisms do the whole job:
+
+**The compiler drops what you never call.** Nim emits no C for an unreferenced
+proc, so importing the package does not drag it into your binary:
+
+| what you import and use | binary |
+|---|---|
+| nothing (baseline program) | 42,248 B |
+| `simd_nexus/sequences/gf256`, one call | 43,416 B |
+| all of `simd_nexus`, one gf256 call | 43,808 B |
+| all of `simd_nexus`, gf256 + SIMD ops + streams + GPU | 51,664 B |
+
+Using one function out of the package costs about 1.5 KB, not the package.
+
+**Each module declares the instruction sets its own intrinsics need**, by
+importing `isa/x86` (SSSE3, SSE4.1) or `isa/x86_avx2` (AVX2, which implies the
+rest). Because those flags travel with the import, the granularity is automatic:
+
+```text
+import simd_nexus/sequences/gf256   ->  -mssse3 -msse4.1
+import simd_nexus                   ->  -mssse3 -msse4.1 -mavx2
+```
+
+Reaching for one 128-bit byte-stream helper does not hand you an AVX2-only
+binary as a side effect of touching the package. Putting these flags in the
+repo's `nim.cfg` instead would only work while SIMD-Nexus is the project being
+built — every outside importer got a gcc `target specific option mismatch`.
+`nimble testConsumer` compiles throwaway consumers from outside the repo so
+that failure mode cannot come back unnoticed.
+
+## GF(256) For Erasure Codes
+
+`sequences/gf256` multiplies whole byte buffers by a field coefficient, which is
+the inner loop of every Reed-Solomon or network coding scheme. A coefficient is
+split into two 16-entry tables once, then each byte costs two table lookups and
+one xor — and a single SIMD shuffle does 16 (SSSE3, NEON) or 32 (AVX2) lanes of
+that at a time.
+
+```nim
+import simd_nexus
+
+var
+  parity = newSeq[uint8](1024)
+  data = newSeq[uint8](1024)
+  t = gf256Tables(0x1b'u8)   # build once
+
+gf256MulAdd(parity, data, t) # parity[i] ^= data[i] * 0x1b
+gf256AddInto(parity, data)   # parity[i] ^= data[i]
+```
+
+The lane width is picked at compile time: AVX2 under `-d:simdNexusEnableAvx2`,
+SSSE3 on any `amd64`/`i386` build, `vqtbl1q_u8` on `aarch64`, and a plain byte
+loop everywhere else. Every backend is checked against the scalar reference at
+every buffer length from 0 to 200, so tails and lane boundaries stay honest.
 
 ## Quick Usage
 

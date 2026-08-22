@@ -3,9 +3,8 @@
 # <- Higher-level SIMD helpers and formatters#
 #============================================#
 
-import 
-    base_operations,
-    converters
+import ../isa/x86_avx2
+import base_operations
 
 
 proc rotLeft32S(A: M256i, c: uint32): M256i =

@@ -7,3 +7,6 @@ iron/.gitmodules.local
 .iron/.local*
 !.iron/.local*.template
 
+build/
+tests/test_basic
+tests/test_gf256

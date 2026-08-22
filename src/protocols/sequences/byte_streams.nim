@@ -10,7 +10,7 @@ when defined(neon) or defined(arm64) or defined(aarch64):
     import nimsimd/neon
 
 when defined(simdNexusEnableAvx2) or defined(eirEnableAvx2):
-    {.passC: "-mavx2".}
+    import ../isa/x86_avx2
     import nimsimd/avx2
 
 
@@ -36,7 +36,7 @@ proc xorBytes16Into*(dst: var openArray[uint8], dstOffset: int,
     ## aOffset: left byte offset.
     ## B: right byte buffer.
     ## bOffset: right byte offset.
-    when defined(sse2):
+    when defined(amd64) or defined(i386):
         var
             va: M128i = mm_loadu_si128(cast[pointer](unsafeAddr A[aOffset]))
             vb: M128i = mm_loadu_si128(cast[pointer](unsafeAddr B[bOffset]))
@@ -60,7 +60,7 @@ proc xorBytes16InPlace*(dst: var openArray[uint8], dstOffset: int,
     ## dstOffset: destination byte offset.
     ## A: source byte buffer.
     ## aOffset: source byte offset.
-    when defined(sse2):
+    when defined(amd64) or defined(i386):
         var
             vd: M128i = mm_loadu_si128(cast[pointer](unsafeAddr dst[dstOffset]))
             va: M128i = mm_loadu_si128(cast[pointer](unsafeAddr A[aOffset]))
@@ -76,6 +76,24 @@ proc xorBytes16InPlace*(dst: var openArray[uint8], dstOffset: int,
         while i < sseByteLaneWidth:
             dst[dstOffset + i] = dst[dstOffset + i] xor A[aOffset + i]
             i = i + 1
+
+
+proc sadBytes16*(A: openArray[uint8], aOffset: int,
+    B: openArray[uint8], bOffset: int): int =
+    ## A/B: byte buffers with at least 16 readable bytes at their offsets.
+    ## Returns the unsigned sum of absolute byte differences.
+    when defined(amd64) or defined(i386):
+        var
+            va: M128i = mm_loadu_si128(cast[pointer](unsafeAddr A[aOffset]))
+            vb: M128i = mm_loadu_si128(cast[pointer](unsafeAddr B[bOffset]))
+            sums: array[2, uint64]
+        mm_storeu_si128(cast[pointer](unsafeAddr sums[0]), mm_sad_epu8(va, vb))
+        result = int(sums[0] + sums[1])
+    else:
+        var i: int = 0
+        while i < sseByteLaneWidth:
+            result += abs(int(A[aOffset + i]) - int(B[bOffset + i]))
+            i += 1
 
 
 proc toSseByteStream*(bs: openArray[uint8]): SseByteStream =
@@ -164,6 +182,15 @@ when defined(simdNexusEnableAvx2) or defined(eirEnableAvx2):
             len*: int
 
 
+    proc xorBytes32InPlace*(dst: var openArray[uint8], dstOffset: int,
+        A: openArray[uint8], aOffset: int) =
+        ## dst/A: buffers with at least 32 readable/writable bytes at offsets.
+        var
+            vd: M256i = mm256_loadu_si256(cast[pointer](unsafeAddr dst[dstOffset]))
+            va: M256i = mm256_loadu_si256(cast[pointer](unsafeAddr A[aOffset]))
+        mm256_storeu_si256(cast[pointer](unsafeAddr dst[dstOffset]), mm256_xor_si256(vd, va))
+
+
     proc toAvxByteStream*(bs: openArray[uint8]): AvxByteStream =
         ## bs: scalar byte stream.
         ## Returns packed AVX2 stream with zero-padded final lane.
@@ -238,3 +265,15 @@ when defined(simdNexusEnableAvx2) or defined(eirEnableAvx2):
         while i < laneCount:
             result.lanes[i] = mm256_xor_si256(a.lanes[i], b.lanes[i])
             i = i + 1
+
+
+    proc sadBytes32*(A: openArray[uint8], aOffset: int,
+        B: openArray[uint8], bOffset: int): int =
+        ## A/B: byte buffers with at least 32 readable bytes at their offsets.
+        ## Returns the unsigned sum of absolute byte differences.
+        var
+            va: M256i = mm256_loadu_si256(cast[pointer](unsafeAddr A[aOffset]))
+            vb: M256i = mm256_loadu_si256(cast[pointer](unsafeAddr B[bOffset]))
+            sums: array[4, uint64]
+        mm256_storeu_si256(cast[pointer](unsafeAddr sums[0]), mm256_sad_epu8(va, vb))
+        result = int(sums[0] + sums[1] + sums[2] + sums[3])

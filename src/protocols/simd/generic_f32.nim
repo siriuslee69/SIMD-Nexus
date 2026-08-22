@@ -3,6 +3,7 @@
 # <- Generic 32-bit float SIMD helpers.      #
 #============================================#
 
+import ../isa/x86_avx2
 import
     nimsimd/avx2,
     ./base_operations

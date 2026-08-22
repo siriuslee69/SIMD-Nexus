@@ -17,6 +17,7 @@ import
     ./protocols/simd/iterators,
     ./protocols/sequences/custom_operations as sequence_custom_operations,
     ./protocols/sequences/byte_streams as sequence_byte_streams,
+    ./protocols/sequences/gf256 as sequence_gf256,
     ./protocols/gpu/dispatch as gpu_dispatch
 
 export
@@ -33,5 +34,6 @@ export
     iterators,
     sequence_custom_operations,
     sequence_byte_streams,
+    sequence_gf256,
     gpu_dispatch
 

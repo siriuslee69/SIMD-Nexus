@@ -3,6 +3,7 @@
 # <- Legacy SIMD helpers and experiments.    #
 #============================================#
 
+import ./isa/x86_avx2
 import 
     nimsimd/avx2,
     nimsimd/neon

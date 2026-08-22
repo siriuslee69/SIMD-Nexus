@@ -3,6 +3,7 @@
 # <- SIMD range iterators with vector masks. #
 #============================================#
 
+import ../isa/x86_avx2
 import
     nimsimd/avx2,
     nimsimd/sse2,

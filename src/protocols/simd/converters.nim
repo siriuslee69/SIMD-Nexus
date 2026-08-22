@@ -3,6 +3,7 @@
 # <- Scalar/array to SIMD conversion helpers #
 #============================================#
 
+import ../isa/x86_avx2
 import 
     nimsimd/avx2,
     base_operations

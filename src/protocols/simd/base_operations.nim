@@ -3,6 +3,7 @@
 # <- Core SIMD type aliases and operators.   #
 #============================================#
 
+import ../isa/x86_avx2
 import 
     nimsimd/sse2,
     nimsimd/avx2,
