@@ -4,7 +4,7 @@
 #============================================#
 
 import std/unittest
-import ../src/protocols/sequences/gf256
+import protocols/sequences/gf256
 
 proc referenceMulAdd(dst: var seq[uint8], A: seq[uint8], c: uint8) =
     ## dst/A/c: scalar reference the SIMD lanes must agree with byte for byte.

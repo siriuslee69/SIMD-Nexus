@@ -8,6 +8,11 @@ srcDir        = "src"
 requires "nim >= 1.6.0"
 requires "nimsimd >= 1.3.2"
 
+## SIMD-Nexus keeps its own `test` (AVX2 run + outside consumers); the other
+## generic tasks come from Nimble-Tasks, included at the end of this file.
+const
+  ownTasks: array[1, string] = ["test"]
+
 
 proc consumerCheck(name, body: string) =
   ## Compile one consumer OUTSIDE the repo, so this repo's nim.cfg cannot
@@ -52,59 +57,20 @@ doAssert getGpu().len > 0
 """)
 
 task test, "Run unit tests":
-  exec "nim c -r tests/test_basic.nim"
-  exec "nim c -r tests/test_gf256.nim"
-  exec "nim c -r -d:simdNexusEnableAvx2 --out:build/test_gf256_avx2 tests/test_gf256.nim"
+  exec "nim c -r evaluation/tests/test_basic.nim"
+  exec "nim c -r evaluation/tests/test_gf256.nim"
+  exec "nim c -r -d:simdNexusEnableAvx2 --out:build/test_gf256_avx2 evaluation/tests/test_gf256.nim"
   testConsumerTask()
 
 task buildLib, "Build the simd_nexus module":
   exec "nim c src/simd_nexus.nim"
 
-task autopush, "Add, commit, and push with message from .iron/PROGRESS.md":
-  let progressCandidates = @[".iron/PROGRESS.md", ".iron/progress.md", "progress.md"]
-  var path = ""
-  for candidate in progressCandidates:
-    if fileExists(candidate):
-      path = candidate
-      break
-  var msg = ""
-  if path.len > 0 and fileExists(path):
-    let content = readFile(path)
-    for line in content.splitLines:
-      if line.startsWith("Commit Message:"):
-        msg = line["Commit Message:".len .. ^1].strip()
-        break
-  if msg.len == 0:
-    msg = "No specific commit message given."
-  exec "git add -A ."
-  exec "git commit -m \" " & msg & "\""
-  exec "git push"
 
-task find, "Use local clones for submodules in parent folder":
-  let modulesPath = ".gitmodules"
-  if not fileExists(modulesPath):
-    echo "No .gitmodules found."
-  else:
-    let root = parentDir(getCurrentDir())
-    var current = ""
-    for line in readFile(modulesPath).splitLines:
-      let s = line.strip()
-      if s.startsWith("[submodule"):
-        let start = s.find('"')
-        let stop = s.rfind('"')
-        if start >= 0 and stop > start:
-          current = s[start + 1 .. stop - 1]
-      elif current.len > 0 and s.startsWith("path"):
-        let parts = s.split("=", maxsplit = 1)
-        if parts.len == 2:
-          let subPath = parts[1].strip()
-          let tail = splitPath(subPath).tail
-          let localDir = joinPath(root, tail)
-          if dirExists(localDir):
-            let localUrl = localDir.replace('\\', '/')
-            exec "git config -f .gitmodules submodule." & current & ".url " & localUrl
-            exec "git config submodule." & current & ".url " & localUrl
-    exec "git submodule sync --recursive"
-
-
-
+## Shared tasks (autopush, switch, applyNightly, updateSubmodules, clean, …):
+## the sibling clone wins, the submodule is the fallback. `nimble sharedTasks`
+when fileExists(thisDir() & "/../Nimble-Tasks/src/nimbleTasks.nims"):
+  include "../Nimble-Tasks/src/nimbleTasks.nims"
+elif fileExists(thisDir() & "/submodules/Nimble-Tasks/src/nimbleTasks.nims"):
+  include "submodules/Nimble-Tasks/src/nimbleTasks.nims"
+else:
+  {.error: "Nimble-Tasks not found: git submodule update --init submodules/Nimble-Tasks".}

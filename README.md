@@ -8,7 +8,7 @@ SIMD helper types, conversions, and operations for Nim with AVX2/SSE/NEON backen
 - `matrices/`: matrix-oriented SIMD helpers.
 - `sequences/`: SIMD-aware sequence utilities, including GF(256) field arithmetic.
 - `isa/`: instruction-set declarations imported by the modules that need them.
-- `tests/`: unit tests for core behavior.
+- `evaluation/tests/`: unit tests for core behavior.
 
 ## Import Only What You Use
 
@@ -169,8 +169,8 @@ type conversion, primitive vector ops, and low-level kernels.
 - Use concise parameter names based on meaning; document each parameter with `##`.
 - Declare variables at the top of procs; initialize immediately when possible.
 - Add SIMD helpers in shared locations to avoid near-duplicate implementations.
-- Keep `.iron/PROGRESS.md` updated with commit message, features, and recent work notes.
-- Add nimble tasks for tests/builds and an `autopush` task using `.iron/PROGRESS.md`.
+- Keep `agents/PROGRESS.md` updated with commit message, features, and recent work notes.
+- Generic nimble tasks (autopush, switch, applyNightly, updateSubmodules, …) come from the shared Nimble-Tasks submodule; only repo-specific tasks live in `simd_nexus.nimble`.
 - Exclude `builds/` and `*.exe` in `.gitignore`.
 
 ## Coding Conventions (Full)
@@ -228,7 +228,7 @@ proc myProc(a, b: uint8): uint8 =
 ### Project Layout
 - The actual project belongs in `src`. Create it if missing.
 - Submodules can live outside `src`.
-- Every repo must include a `.iron/` folder next to `src/` for repo-coordination metadata.
+- Every repo keeps its handoff notes in `agents/PROGRESS.md` next to `src/`.
 - Every module (`.nim` file) must have a description at the top explaining what it does.
 - Organize modules by dependency levels (helpers/types at top; deeper modules depend upward).
 
@@ -250,12 +250,9 @@ src/level1/level2/module3.nim
 
 ### Tools and Tests
 - Add a `tools` folder when needed (submodule builders or other pre-compile utilities).
-- Always include a `tests` folder with unit tests for important functions.
+- Keep tests below `evaluation/tests/`, benchmarks below `evaluation/benchmarks/`.
 - After changing code or dependencies, run tests and fix errors.
 
-### iron Folder (Repo Coordination)
-- Use `Proto-RepoTemplate/.iron/` as the template source.
-- The local submodule override file is `.iron/.local.gitmodules.toml` and must be ignored by git.
 
 ### Dependencies and External Projects
 - If you need an entirely different project as a dependency, ask before starting a new sibling repo.
@@ -270,12 +267,12 @@ src/level1/level2/module3.nim
 ### Nimsuggest
 - Do not write pre-compile-time import statements that prevent nimsuggest from checking functions.
 
-### .iron/PROGRESS.md
+### agents/PROGRESS.md
 - Track current commit message, features planned/implemented/in progress, and recent changes/problems.
 
 ### .nimble Tasks
 - Include tasks for tests and builders.
-- Include an `autopush` task that reads the commit message from `.iron/PROGRESS.md`.
+- Include an `autopush` task that reads the commit message from `agents/PROGRESS.md`.
 
 ### Git
 - Add `builds/` and `*.exe` to `.gitignore`.
@@ -287,8 +284,8 @@ src/level1/level2/module3.nim
 ## Issue Playbook
 
 - Symptom: `nimble test` or `nimble build` fails with Nimble metadata write errors under `%USERPROFILE%\\.nimble` (for example `nimbledata2.json`).
-  Workaround: run direct Nim commands such as `nim c -r tests/test_basic.nim` and `nim c src/simd_nexus.nim`, then record the environment issue in `.iron/PROGRESS.md`.
-- Symptom: stale `*.exe` files appear in `src/` or `tests/` after local runs.
+  Workaround: run direct Nim commands such as `nim c -r evaluation/tests/test_basic.nim` and `nim c src/simd_nexus.nim`, then record the environment issue in `agents/PROGRESS.md`.
+- Symptom: stale `*.exe` files appear in `src/` or `evaluation/tests/` after local runs.
   Workaround: remove generated binaries before committing; `*.exe` is intentionally ignored and only Nim sources should be tracked.
 - Symptom: `nimble autopush` uses a generic commit message.
-  Workaround: ensure `.iron/PROGRESS.md` contains a line starting with `Commit Message:` and rerun `nimble autopush`.
+  Workaround: ensure `agents/PROGRESS.md` contains a line starting with `Commit Message:` and rerun `nimble autopush`.

@@ -1,12 +1,16 @@
 builds/
 *.exe
 src/*.exe
-tests/*.exe
-iron/iron_config.md
-iron/.gitmodules.local
-.iron/.local*
-!.iron/.local*.template
 
 build/
-tests/test_basic
-tests/test_gf256
+.iron/
+agents/.local*
+evaluation/**/test_*
+!evaluation/**/test_*.nim
+# conventions stay local, never committed
+CONVENTIONS.md
+GUIDELINES.md
+PERSONALITY.md
+PROJECTS.md
+TOOLS.md
+UI.md

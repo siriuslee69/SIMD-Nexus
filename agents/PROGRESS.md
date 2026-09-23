@@ -1,4 +1,4 @@
-Commit Message: fix simd nexus autopush path and repo hygiene
+Commit Message: Move onto the agents/ + evaluation/ layout and take generic tasks from Nimble-Tasks
 
 Features Planned:
 - AVX2 compare/mask intrinsics for wider search helpers.

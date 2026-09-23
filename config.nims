@@ -22,3 +22,13 @@ when not declared(simdNexusNoNimbleFallback):
           switch("path", p)
   if dirExists(fallback):
     switch("path", fallback)
+
+## Shared pragmas and promises: one copy for the whole workspace.
+if dirExists(thisDir() & "/../Rune-Pragmas/meta"):
+  switch("path", thisDir() & "/../Rune-Pragmas/meta")
+if dirExists(thisDir() & "/submodules/Rune-Pragmas/meta"):
+  switch("path", thisDir() & "/submodules/Rune-Pragmas/meta")
+if dirExists(thisDir() & "/../Var-Invariants/src"):
+  switch("path", thisDir() & "/../Var-Invariants/src")
+if dirExists(thisDir() & "/submodules/Var-Invariants/src"):
+  switch("path", thisDir() & "/submodules/Var-Invariants/src")

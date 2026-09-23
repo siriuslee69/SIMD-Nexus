@@ -5,17 +5,17 @@
 
 import std/unittest
 import nimsimd/sse2
-import ../src/protocols/simd/base_operations
-import ../src/protocols/simd/converters
-import ../src/protocols/simd/generic_u32
-import ../src/protocols/simd/generic_i8
-import ../src/protocols/simd/generic_i16
-import ../src/protocols/simd/generic_u64
-import ../src/protocols/simd/generic_f32
-import ../src/protocols/simd/generic_f64
-import ../src/protocols/simd/iterators
-import ../src/protocols/sequences/custom_operations
-import ../src/protocols/gpu/dispatch
+import protocols/simd/base_operations
+import protocols/simd/converters
+import protocols/simd/generic_u32
+import protocols/simd/generic_i8
+import protocols/simd/generic_i16
+import protocols/simd/generic_u64
+import protocols/simd/generic_f32
+import protocols/simd/generic_f64
+import protocols/simd/iterators
+import protocols/sequences/custom_operations
+import protocols/gpu/dispatch
 
 suite "simd_nexus basic":
   test "i32x4 add/extract":
